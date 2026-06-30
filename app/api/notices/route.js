@@ -1,7 +1,19 @@
 import { NextResponse } from 'next/server';
-const items=[
- {id:'n1',title:'玉龙VPN 后台上线',type:'系统通知',status:'已发布',content:'后台已经接入 API，可作为插件远程配置源。'},
- {id:'n2',title:'旧节点配置已导入',type:'配置通知',status:'已发布',content:'已按旧插件结构导入节点域名与端口。'},
- {id:'n3',title:'配置发布链路恢复',type:'发布通知',status:'草稿',content:'config 与 notice 接口已可被前端读取。'}
-];
-export async function GET(){return NextResponse.json({ok:true,items,updated:new Date().toISOString()});}
+import { listNotices, createNotice, updateNotice, deleteNotice, publicNotices } from '../../../lib/notices';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export async function GET(request){
+  const { searchParams } = new URL(request.url);
+  const mode = searchParams.get('public');
+  const result = await listNotices();
+  const items = mode === '1' ? publicNotices(result.items) : result.items;
+  return NextResponse.json({ ok:true, items, source:result.source, editable:result.editable, error:result.error||null, updated:new Date().toISOString() }, { headers:{ 'Cache-Control':'no-store, max-age=0' } });
+}
+
+export async function POST(request){
+  const body = await request.json().catch(()=>({}));
+  const result = body._method === 'update' ? await updateNotice(body.id, body) : body._method === 'remove' ? await deleteNotice(body.id) : await createNotice(body);
+  return NextResponse.json(result, { status:result.ok?200:503, headers:{ 'Cache-Control':'no-store, max-age=0' } });
+}
