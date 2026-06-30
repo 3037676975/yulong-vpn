@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { listNodes, createNode, updateNode, deleteNode, toAdmin } from '@/lib/nodes';
+import { listNodes, createNode, updateNode, deleteNode, toAdmin } from '../../../lib/nodes';
 
 export async function GET() {
   const result = await listNodes();
