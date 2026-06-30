@@ -1,8 +1,6 @@
-import './globals.css';
-
 export const metadata = {
-  title: '玉龙VPN 管理后台',
-  description: 'Yulong VPN admin dashboard'
+  title: '玉龙管理后台',
+  description: 'Yulong admin dashboard'
 };
 
 export default function RootLayout({ children }) {
