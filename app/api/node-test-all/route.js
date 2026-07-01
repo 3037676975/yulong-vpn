@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { listNodes } from '../../../lib/nodes';
 import { insertAdminLog, insertNodeChecks } from '../../../lib/adminDb';
+import { isAdminRequest, unauthorized } from '../../../lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -28,21 +29,11 @@ async function testNode(node){
   const port = Number(node.port || 443);
   if(!host) return {id:node.id,name:node.name,ok:false,message:'缺少节点地址',ms:null};
   const entry = await timedFetch(`https://${host}:${port}/`, 6000);
-  return {
-    id: node.id,
-    name: node.name,
-    region: node.region,
-    host,
-    port,
-    ok: entry.ok,
-    ms: entry.ms,
-    status: entry.status,
-    message: entry.ok ? '入口正常' : '入口失败',
-    error: entry.error || null
-  };
+  return {id: node.id, name: node.name, region: node.region, host, port, ok: entry.ok, ms: entry.ms, status: entry.status, message: entry.ok ? '入口正常' : '入口失败', error: entry.error || null};
 }
 
-export async function POST(){
+export async function POST(request){
+  if(!isAdminRequest(request)) return unauthorized();
   const startedAt = Date.now();
   const runId = `check-${Date.now()}`;
   const data = await listNodes();
@@ -50,19 +41,7 @@ export async function POST(){
   const outside = await timedFetch('https://www.google.com/generate_204', 6000);
   const results = await Promise.all(items.map(testNode));
   const okCount = results.filter(x=>x.ok).length;
-  const payload = {
-    ok: true,
-    runId,
-    source: data.source,
-    total: results.length,
-    okCount,
-    failCount: results.length - okCount,
-    outside,
-    results,
-    costMs: Date.now() - startedAt,
-    note: '这是后台服务器到节点入口的真实连通检测；Chrome 真实代理测速仍以插件端检测为准。',
-    checkedAt: new Date().toISOString()
-  };
+  const payload = {ok: true, runId, source: data.source, total: results.length, okCount, failCount: results.length - okCount, outside, results, costMs: Date.now() - startedAt, note: '这是后台服务器到节点入口的真实连通检测；Chrome 真实代理测速仍以插件端检测为准。', checkedAt: new Date().toISOString()};
   await insertNodeChecks(runId, results);
   await insertAdminLog('一键检测全部节点',{runId,total:payload.total,okCount:payload.okCount,failCount:payload.failCount,costMs:payload.costMs});
   return NextResponse.json(payload,{headers:{'Cache-Control':'no-store, max-age=0'}});
