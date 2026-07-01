@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="cn.yulong.vpn.cordova" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>玉龙VPN</name>
+  <description>玉龙VPN Android Cordova 版。</description>
+  <author>3037676975</author>
+  <content src="index.html" />
+  <access origin="https://yulong-vpn-three.vercel.app" />
+  <access origin="https://yulong-vpn-3037676975s-projects.vercel.app" />
+  <access origin="https://yulong-vpn-git-main-3037676975s-projects.vercel.app" />
+  <allow-navigation href="https://yulong-vpn-three.vercel.app/*" />
+  <allow-navigation href="https://yulong-vpn-3037676975s-projects.vercel.app/*" />
+  <allow-navigation href="https://yulong-vpn-git-main-3037676975s-projects.vercel.app/*" />
+  <preference name="DisallowOverscroll" value="true" />
+  <preference name="Orientation" value="portrait" />
+  <preference name="android-minSdkVersion" value="23" />
+  <preference name="android-targetSdkVersion" value="35" />
+  <preference name="AndroidLaunchMode" value="singleTask" />
+</widget>
