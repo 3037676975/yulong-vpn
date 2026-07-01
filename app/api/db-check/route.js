@@ -8,12 +8,13 @@ export const revalidate = 0;
 export async function GET() {
   try {
     const result = await listNodes();
-    const [notices, checks, logs, clients, usageEvents] = await Promise.all([
+    const [notices, checks, logs, clients, usageEvents, accessSettings] = await Promise.all([
       tableCount('yulong_notices'),
       tableCount('yulong_node_checks'),
       tableCount('yulong_admin_logs'),
       tableCount('yulong_clients'),
-      tableCount('yulong_usage_events')
+      tableCount('yulong_usage_events'),
+      tableCount('yulong_access_settings')
     ]);
     const ok = result.source === 'supabase';
     return NextResponse.json({
@@ -28,7 +29,8 @@ export async function GET() {
         yulong_node_checks: checks,
         yulong_admin_logs: logs,
         yulong_clients: clients,
-        yulong_usage_events: usageEvents
+        yulong_usage_events: usageEvents,
+        yulong_access_settings: accessSettings
       },
       env: {
         hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
@@ -38,7 +40,7 @@ export async function GET() {
       },
       message: ok ? '数据库连接成功' : '数据库未连接，当前使用内置兜底节点',
       error: result.error || null,
-      hint: ok ? '后台已经可以读取 Supabase；如果用户统计表不存在，请运行 v16 数据库升级 SQL。' : '先看 env 两个值是否都是 true；如果是 true 但仍失败，再看 error 字段',
+      hint: ok ? '后台已经可以读取 Supabase；如果验证码设置表不存在，请运行 v17 数据库升级 SQL。' : '先看 env 两个值是否都是 true；如果是 true 但仍失败，再看 error 字段',
       checkedAt: new Date().toISOString()
     }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
   } catch (error) {
