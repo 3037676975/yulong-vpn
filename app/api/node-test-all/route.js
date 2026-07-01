@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { listNodes } from '../../../lib/nodes';
+import { insertAdminLog, insertNodeChecks } from '../../../lib/adminDb';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -43,13 +44,15 @@ async function testNode(node){
 
 export async function POST(){
   const startedAt = Date.now();
+  const runId = `check-${Date.now()}`;
   const data = await listNodes();
   const items = (data.items||[]).filter(n=>n && (n.server || n.address));
   const outside = await timedFetch('https://www.google.com/generate_204', 6000);
   const results = await Promise.all(items.map(testNode));
   const okCount = results.filter(x=>x.ok).length;
-  return NextResponse.json({
+  const payload = {
     ok: true,
+    runId,
     source: data.source,
     total: results.length,
     okCount,
@@ -59,5 +62,8 @@ export async function POST(){
     costMs: Date.now() - startedAt,
     note: '这是后台服务器到节点入口的真实连通检测；Chrome 真实代理测速仍以插件端检测为准。',
     checkedAt: new Date().toISOString()
-  },{headers:{'Cache-Control':'no-store, max-age=0'}});
+  };
+  await insertNodeChecks(runId, results);
+  await insertAdminLog('一键检测全部节点',{runId,total:payload.total,okCount:payload.okCount,failCount:payload.failCount,costMs:payload.costMs});
+  return NextResponse.json(payload,{headers:{'Cache-Control':'no-store, max-age=0'}});
 }
