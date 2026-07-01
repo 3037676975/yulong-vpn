@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" id="yulong-vpn-service" version="1.0.0">
+  <name>YulongVPNService</name>
+  <js-module src="www/YulongVPN.js" name="YulongVPN">
+    <clobbers target="YulongVPN" />
+  </js-module>
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="YulongVPN">
+        <param name="android-package" value="cn.yulong.vpn.YulongVpnPlugin" />
+      </feature>
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.INTERNET" />
+      <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    </config-file>
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <service android:name="cn.yulong.vpn.YulongVpnService" android:permission="android.permission.BIND_VPN_SERVICE" android:exported="false">
+        <intent-filter>
+          <action android:name="android.net.VpnService" />
+        </intent-filter>
+      </service>
+    </config-file>
+    <source-file src="src/android/YulongVpnPlugin.java" target-dir="src/cn/yulong/vpn" />
+    <source-file src="src/android/YulongVpnService.java" target-dir="src/cn/yulong/vpn" />
+  </platform>
+</plugin>
