@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { listNotices, createNotice, updateNotice, deleteNotice, publicNotices } from '../../../lib/notices';
+import { isAdminRequest, unauthorized } from '../../../lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,6 +14,7 @@ export async function GET(request){
 }
 
 export async function POST(request){
+  if(!isAdminRequest(request)) return unauthorized();
   const body = await request.json().catch(()=>({}));
   const result = body._method === 'update' ? await updateNotice(body.id, body) : body._method === 'remove' ? await deleteNotice(body.id) : await createNotice(body);
   return NextResponse.json(result, { status:result.ok?200:503, headers:{ 'Cache-Control':'no-store, max-age=0' } });
