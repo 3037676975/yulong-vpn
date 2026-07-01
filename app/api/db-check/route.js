@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { listNodes } from '../../../lib/nodes';
 import { tableCount } from '../../../lib/adminDb';
+import { isAdminRequest, unauthorized } from '../../../lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request) {
+  if(!isAdminRequest(request)) return unauthorized();
   try {
     const result = await listNodes();
     const [notices, checks, logs, clients, usageEvents, accessSettings] = await Promise.all([
@@ -40,22 +42,10 @@ export async function GET() {
       },
       message: ok ? '数据库连接成功' : '数据库未连接，当前使用内置兜底节点',
       error: result.error || null,
-      hint: ok ? '后台已经可以读取 Supabase；如果验证码设置表不存在，请运行 v17 数据库升级 SQL。' : '先看 env 两个值是否都是 true；如果是 true 但仍失败，再看 error 字段',
+      hint: ok ? '后台已经可以读取 Supabase。' : '先看 env 两个值是否都是 true；如果是 true 但仍失败，再看 error 字段',
       checkedAt: new Date().toISOString()
     }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
   } catch (error) {
-    return NextResponse.json({
-      ok: false,
-      connected: false,
-      source: 'error',
-      nodeCount: 0,
-      env: {
-        hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
-        hasServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)
-      },
-      message: '数据库检查失败',
-      error: String(error?.message || error),
-      checkedAt: new Date().toISOString()
-    }, { status: 500, headers: { 'Cache-Control': 'no-store, max-age=0' } });
+    return NextResponse.json({ ok: false, connected: false, source: 'error', nodeCount: 0, message: '数据库检查失败', error: String(error?.message || error), checkedAt: new Date().toISOString() }, { status: 500, headers: { 'Cache-Control': 'no-store, max-age=0' } });
   }
 }
