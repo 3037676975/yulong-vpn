@@ -8,6 +8,7 @@ export const revalidate = 0;
 export async function GET(request){
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get('public');
+  if(mode !== '1' && !isAdminRequest(request)) return unauthorized();
   const result = await listNotices();
   const items = mode === '1' ? publicNotices(result.items) : result.items;
   return NextResponse.json({ ok:true, items, source:result.source, editable:result.editable, error:result.error||null, updated:new Date().toISOString() }, { headers:{ 'Cache-Control':'no-store, max-age=0' } });
