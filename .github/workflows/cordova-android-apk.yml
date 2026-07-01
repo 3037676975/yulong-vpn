@@ -1,0 +1,43 @@
+name: Build Cordova Android APK
+
+on:
+  push:
+    paths:
+      - 'cordova-app/**'
+      - '.github/workflows/cordova-android-apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Cordova dependencies
+        working-directory: cordova-app
+        run: npm install
+      - name: Add Android platform
+        working-directory: cordova-app
+        run: npx cordova platform add android@13.0.0
+      - name: Add Yulong VPN native plugin
+        working-directory: cordova-app
+        run: npx cordova plugin add ./plugins/yulong-vpn-service
+      - name: Build Cordova debug APK
+        working-directory: cordova-app
+        run: npx cordova build android --debug -- --packageType=apk
+      - name: Upload Cordova APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: yulong-vpn-cordova-debug-apk
+          path: cordova-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
