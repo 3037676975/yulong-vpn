@@ -1,0 +1,56 @@
+name: Build And Publish Cordova APK
+
+on:
+  push:
+    paths:
+      - 'cordova-app/**'
+      - '.github/workflows/cordova-android-apk-publish.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Cordova dependencies
+        working-directory: cordova-app
+        run: npm install
+      - name: Add Android platform
+        working-directory: cordova-app
+        run: npx cordova platform add android@13.0.0
+      - name: Add Yulong VPN native plugin
+        working-directory: cordova-app
+        run: npx cordova plugin add ./plugins/yulong-vpn-service
+      - name: Build Cordova debug APK
+        working-directory: cordova-app
+        run: npx cordova build android --debug -- --packageType=apk
+      - name: Copy APK to repo download folder
+        run: |
+          mkdir -p apk
+          cp cordova-app/platforms/android/app/build/outputs/apk/debug/app-debug.apk apk/yulong-vpn-cordova-debug.apk
+          cd apk
+          zip -q yulong-vpn-cordova-debug-apk.zip yulong-vpn-cordova-debug.apk
+      - name: Commit APK to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apk/yulong-vpn-cordova-debug.apk apk/yulong-vpn-cordova-debug-apk.zip
+          git commit -m "自动生成 Cordova Android APK" || echo "No APK changes to commit"
+          git push
