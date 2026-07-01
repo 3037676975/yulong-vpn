@@ -1,0 +1,15 @@
+{
+  "name": "yulong-vpn-cordova",
+  "version": "1.0.0",
+  "private": true,
+  "description": "玉龙VPN Cordova Android 壳：复用插件 HTML UI，接入原生 VPN Service。",
+  "scripts": {
+    "platform:android": "cordova platform add android@13.0.0",
+    "plugin:vpn": "cordova plugin add ./plugins/yulong-vpn-service",
+    "build:android": "cordova build android --debug -- --packageType=apk"
+  },
+  "devDependencies": {
+    "cordova": "^12.0.0",
+    "cordova-android": "^13.0.0"
+  }
+}
