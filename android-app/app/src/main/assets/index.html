@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>玉龙VPN Android</title>
+<style>
+:root{--bg:#060708;--panel:rgba(18,20,24,.82);--line:rgba(225,190,116,.20);--gold:#f4d78b;--gold2:#a87222;--text:#f7ead0;--muted:#b7aa91;--green:#71f59a;--red:#ff7676}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 80% 0,#3c2b12 0,#101214 38%,#050607 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Arial,sans-serif;overflow:hidden}.app{width:100vw;height:100vh;padding:18px;display:flex;flex-direction:column;gap:14px}.top{display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#fff0b8,#d59d3a 60%,#7b4d14);color:#15100a;display:grid;place-items:center;font-weight:900;box-shadow:0 14px 38px rgba(213,157,58,.28)}h1{font-size:24px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:3px}.pill{border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:rgba(255,255,255,.06);font-size:12px;color:var(--gold)}.card{background:var(--panel);border:1px solid var(--line);border-radius:26px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(18px)}.main{padding:18px;display:flex;flex-direction:column;gap:16px;min-height:0;flex:1}.hero{display:grid;place-items:center;text-align:center;padding:18px 8px}.shield{width:128px;height:128px;border-radius:42px;background:radial-gradient(circle at 40% 25%,#fff4be,#d59d3a 45%,#604016 92%);display:grid;place-items:center;color:#15100a;font-size:52px;font-weight:900;box-shadow:0 18px 60px rgba(213,157,58,.28)}.node-name{font-size:28px;font-weight:900;margin:14px 0 4px}.hint{color:var(--muted);font-size:13px;line-height:1.6}.codebox{display:flex;gap:10px}.codebox input{flex:1;height:48px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;padding:0 16px;font-size:18px;letter-spacing:4px;text-align:center;outline:none}.btn{height:48px;border:0;border-radius:16px;padding:0 16px;font-weight:900;color:#15100a;background:linear-gradient(135deg,var(--gold),var(--gold2));box-shadow:0 10px 28px rgba(213,157,58,.18)}.btn.secondary{color:var(--text);background:rgba(255,255,255,.06);border:1px solid var(--line);box-shadow:none}.btn.red{color:white;background:linear-gradient(135deg,#b23636,#5d1616)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.menu{display:flex;gap:10px}.menu .btn{flex:1}.status{display:flex;gap:10px;align-items:center;justify-content:center;color:var(--muted);font-size:13px}.dot{width:10px;height:10px;border-radius:50%;background:var(--muted)}.dot.on{background:var(--green);box-shadow:0 0 18px var(--green)}.dot.off{background:var(--red);box-shadow:0 0 18px var(--red)}.list{display:none;flex-direction:column;gap:12px;height:100%;min-height:0}.list.active{display:flex}.screen.home.hidden{display:none}.list-head{display:flex;align-items:center;justify-content:space-between}.list h2{margin:0;font-size:22px}.scroll{overflow-y:auto;min-height:0;flex:1;padding-right:4px}.node{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px;margin-bottom:10px;border:1px solid rgba(225,190,116,.14);border-radius:18px;background:rgba(255,255,255,.045)}.node.active{border-color:rgba(244,215,139,.55);background:rgba(244,215,139,.08)}.node b{display:block;font-size:15px}.node small{display:block;color:var(--muted);margin-top:4px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.badge{min-width:58px;text-align:center;border-radius:999px;padding:7px 8px;font-size:12px;border:1px solid var(--line);color:var(--muted)}.badge.ok{color:var(--green);border-color:rgba(113,245,154,.35);background:rgba(113,245,154,.08)}.badge.bad{color:var(--red);border-color:rgba(255,118,118,.35);background:rgba(255,118,118,.08)}.badge.wait{color:var(--gold);border-color:rgba(244,215,139,.35);background:rgba(244,215,139,.08)}.toast{min-height:20px;text-align:center;font-size:13px;color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div class="brand"><div class="logo">龙</div><div><h1>玉龙VPN</h1><div class="sub">Android · HTTPS Proxy</div></div></div><div class="pill" id="ver">v1</div></div>
+  <div class="card main">
+    <section class="screen home" id="home">
+      <div class="hero"><div class="shield">盾</div><div class="node-name" id="currentNode">未选择节点</div><div class="hint" id="authText">请输入后台动态验证码后使用</div></div>
+      <div class="codebox" id="codeBox"><input id="code" inputmode="numeric" maxlength="6" placeholder="6位验证码"><button class="btn" onclick="verify()">验证</button></div>
+      <div style="height:10px"></div><button class="btn" id="connectBtn" onclick="toggleConnect()">连接</button>
+      <div style="height:10px"></div><div class="menu"><button class="btn secondary" onclick="refreshNodes()">刷新节点</button><button class="btn secondary" onclick="realCheck()">真实测速</button></div>
+      <div style="height:10px"></div><div class="grid"><button class="btn secondary" onclick="showList()">选择节点</button><button class="btn secondary" onclick="reverify()">重新验证</button><button class="btn secondary" onclick="disconnect()">断开</button></div>
+      <div style="height:12px"></div><div class="status"><span class="dot" id="dot"></span><span id="stateText">未连接</span></div>
+    </section>
+    <section class="list" id="list">
+      <div class="list-head"><div><h2>选择节点 / 可用性结果</h2><div class="hint" id="listHint">显示后台全部节点，右侧为后台检测结果</div></div><button class="btn secondary" onclick="showHome()">返回</button></div>
+      <div class="scroll" id="nodes"></div>
+    </section>
+  </div><div class="toast" id="toast">正在加载配置...</div>
+</div>
+<script>
+let nodes=[], selected=null, connected=false, verified=false, expiresAt='', results={};
+function A(){return window.YulongAndroid}
+function toast(t){document.getElementById('toast').textContent=t||''}
+function expired(){return expiresAt && Date.now()>new Date(expiresAt).getTime()}
+function ensureAuth(){if(!verified || expired()){toast(expired()?'验证码已过期，请重新验证':'请先输入后台动态验证码');return false}return true}
+function render(){document.getElementById('currentNode').textContent=selected?.name||'未选择节点';document.getElementById('authText').textContent=verified&&!expired()?('授权有效至 '+new Date(expiresAt).toLocaleString()):'请输入后台动态验证码后使用';document.getElementById('codeBox').style.display=verified&&!expired()?'none':'flex';document.getElementById('connectBtn').textContent=connected?'断开连接':'连接';document.getElementById('connectBtn').className=connected?'btn red':'btn';document.getElementById('stateText').textContent=connected?'已连接':'未连接';document.getElementById('dot').className='dot '+(connected?'on':'off');renderNodes()}
+function showList(){document.getElementById('home').classList.add('hidden');document.getElementById('list').classList.add('active');renderNodes()}
+function showHome(){document.getElementById('home').classList.remove('hidden');document.getElementById('list').classList.remove('active')}
+function label(n){let r=results[n.id]||results[n.name]||results[n.server];if(!r)return '<span class="badge">未检测</span>';if(r.ok===null)return '<span class="badge wait">检测中</span>';return r.ok?'<span class="badge ok">可用</span>':'<span class="badge bad">不可用</span>'}
+function renderNodes(){let box=document.getElementById('nodes');box.innerHTML=nodes.map((n,i)=>`<div class="node ${selected&&selected.id===n.id?'active':''}" onclick='selectNode(${i})'><div><b>${n.name||'-'}</b><small>${n.server||n.address||''}:${n.port||443} · ${n.scheme||'https'}</small></div>${label(n)}</div>`).join('')||'<div class="hint">暂无节点，点击刷新节点。</div>'}
+function selectNode(i){selected=nodes[i];toast('已选择 '+selected.name);render();showHome()}
+function refreshNodes(){toast('正在刷新后台全部节点...');showList();A().config()}
+function verify(){let c=document.getElementById('code').value.trim();if(!/^\d{6}$/.test(c)){toast('请输入 6 位动态验证码');return}toast('正在验证...');A().verify(c)}
+function reverify(){verified=false;expiresAt='';document.getElementById('code').value='';render();toast('请重新输入验证码')}
+function toggleConnect(){if(connected)return disconnect();connect()}
+function connect(){if(!ensureAuth())return;if(!selected){toast('请先选择节点');showList();return}toast('正在连接 '+selected.name+'...');A().connect(JSON.stringify(selected))}
+function disconnect(){toast('正在断开...');A().disconnect()}
+function realCheck(){if(!ensureAuth())return;showList();toast('正在调用后台一键检测结果...');document.getElementById('listHint').textContent='检测中，请稍等...';results={};nodes.forEach(n=>results[n.id]={ok:null});renderNodes();A().backendCheck()}
+window.onAndroidConfig=function(s){let j=JSON.parse(s);if(j.ok===false){toast(j.message||'配置加载失败');return}nodes=j.nodes||[];if(!selected&&nodes[0])selected=nodes[0];toast('已加载 '+nodes.length+' 个节点');render()}
+window.onAndroidVerify=function(s){let j=JSON.parse(s);if(j.ok){verified=true;expiresAt=j.expiresAt||'';toast('验证成功');A().record('verify_success','')}else{toast(j.message||'验证码错误或已过期')}render()}
+window.onAndroidCheck=function(s){let j=JSON.parse(s);results={};(j.results||[]).forEach(r=>{results[r.id]=r;results[r.name]=r;results[r.host]=r});document.getElementById('listHint').textContent='已同步后台检测结果：可用 '+(j.okCount||0)+' / 不可用 '+(j.failCount||0);toast('检测完成');renderNodes()}
+window.onAndroidConnect=function(s){let j=JSON.parse(s);if(j.ok){connected=true;toast('已连接 '+(selected?.name||''));A().record('connect',selected?.name||'')}else toast(j.message||'连接失败');render()}
+window.onAndroidDisconnect=function(s){connected=false;toast('已断开');A().record('disconnect',selected?.name||'');render()}
+try{let st=JSON.parse(A().state());verified=!!st.verified;expiresAt=st.expiresAt||'';connected=!!st.connected;if(st.node)selected=JSON.parse(st.node)}catch(e){}
+A().config();render();A().record('open','');
+</script>
+</body>
+</html>
