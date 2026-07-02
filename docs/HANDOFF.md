@@ -19,17 +19,16 @@ Vercel 部署
 
 ```txt
 旧 FanVPN 包
-Android APK 验证版
-Cordova Android 版本
 临时金色验证码插件包
 v18 google-check 旧检测版
+其他测试包
 ```
 
 ## 3. 核心目录
 
 ```txt
 app/page.js                  后台主页面
-app/SidebarAccountEntry.js   左侧账号密码设置弹窗
+app/SidebarAccountEntry.js   左侧账号与验证码设置弹窗
 app/api/config/route.js      插件配置接口
 app/api/access-code/route.js 动态验证码验证接口
 app/api/access-settings/route.js 后台验证码设置接口
@@ -43,65 +42,25 @@ lib/adminAuth.js             后台 Cookie 鉴权
 
 ## 4. 关键接口
 
-### 4.1 插件配置
-
 ```txt
-GET /api/config
-```
-
-插件刷新节点时调用。
-
-### 4.2 动态验证码
-
-```txt
-GET /api/access-code
+GET  /api/config
+GET  /api/access-code
 POST /api/access-code
-```
-
-GET 仅后台可用，用于查看当前验证码。
-POST 给插件用，用于校验验证码。
-
-### 4.3 后台验证码设置
-
-```txt
-GET /api/access-settings
+GET  /api/access-settings
 POST /api/access-settings
-```
-
-后台左侧安全设置面板调用。
-
-### 4.4 后台账号设置
-
-```txt
-GET /api/admin-account
+GET  /api/admin-account
 POST /api/admin-account
-```
-
-后台左侧安全设置面板调用。
-
-### 4.5 节点管理
-
-```txt
-GET /api/nodes
+GET  /api/nodes
 POST /api/nodes
-```
-
-用于新增、修改、删除节点。
-
-### 4.6 节点检测
-
-```txt
 POST /api/node-test
 POST /api/node-test-all
 POST /api/plugin-node-test-all
 ```
 
-v18-backend-check 插件使用后台检测逻辑。
-
 ## 5. 后台使用流程
 
 1. 打开后台域名。
-2. 输入后台邮箱和密码登录。
+2. 输入后台账号信息登录。
 3. 左侧进入“节点管理”，新增节点。
 4. 左侧进入“账号密码设置”，设置动态验证码。
 5. 插件输入验证码。
@@ -166,14 +125,11 @@ docs/SUPABASE_SQL.md
 
 ## 9. 当前遗留问题
 
-1. 部分 Android 历史验证文件由于安全工具限制，可能未完全删除干净，但已经不作为正式项目范围。
-2. 插件正式母版建议后续统一放入 `extension/` 目录，避免继续用压缩包散落管理。
-3. 后台代码目前集中在单文件内，后续可以拆分组件，提高可维护性。
-4. 默认 fallback 节点建议开源前替换为演示节点，避免误解为可直接商用节点。
+1. 插件正式母版建议后续统一放入 `extension/` 目录，避免继续用压缩包散落管理。
+2. 后台代码目前集中在单文件内，后续可以拆分组件，提高可维护性。
+3. 默认 fallback 节点建议开源前替换为演示节点，避免误解为可直接商用节点。
 
 ## 10. 接手开发的人应该先做什么
-
-建议顺序：
 
 ```txt
 1. 读 README.md
