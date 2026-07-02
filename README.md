@@ -2,7 +2,7 @@
 
 玉龙VPN 2.0 是一个围绕 **Chrome 浏览器插件 + Web 管理后台** 的开源项目。项目用于管理代理节点、发布插件配置、设置动态验证码、检测节点可用性、查看基础使用统计。
 
-> 当前正式母版：`v18-backend-check`。后续插件升级必须基于这个母版继续做，UI 和检测逻辑不要再混用旧 FanVPN、Android APK 或临时版本。
+> 当前正式母版：`v18-backend-check`。后续插件升级必须基于这个母版继续做，UI 和检测逻辑不要再混用旧 FanVPN 或其他临时版本。
 
 ## 项目定位
 
@@ -137,4 +137,4 @@ ADMIN_PASSWORD
 Chrome 插件 v18-backend-check + Next.js 管理后台 + Supabase 数据库
 ```
 
-旧的 Cordova Android、临时 APK 自动打包、旧 FanVPN 包、临时金色验证码包都不再作为正式交付范围。
+旧 FanVPN 包和临时测试包都不再作为正式交付范围。
