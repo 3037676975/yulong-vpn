@@ -70,11 +70,12 @@ rules:
 export async function GET(request){
   const url = new URL(request.url);
   const code = url.searchParams.get('code') || '';
-  if(code){
-    const ok = await verifyAccessCode(code);
-    if(!ok.ok){
-      return new NextResponse('invalid access code', {status:401, headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'}});
-    }
+  if(!code){
+    return new NextResponse('missing access code', {status:401, headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'}});
+  }
+  const ok = await verifyAccessCode(code);
+  if(!ok.ok){
+    return new NextResponse('invalid access code', {status:401, headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'}});
   }
   const data = await listNodes();
   return new NextResponse(yaml(data.items || []), {
