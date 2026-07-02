@@ -1,20 +1,17 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+const S={shade:{position:'fixed',inset:0,background:'rgba(0,0,0,.42)',zIndex:9998},panel:{position:'fixed',top:18,right:18,bottom:18,width:'min(760px,calc(100vw - 320px))',minWidth:420,overflow:'auto',zIndex:9999,background:'radial-gradient(circle at 86% 0,#473316 0,#171b22 38%,#080a0e 100%)',border:'1px solid rgba(225,190,116,.28)',borderRadius:26,boxShadow:'0 30px 110px rgba(0,0,0,.68)',color:'#f7ead0',fontFamily:'Arial,Microsoft YaHei,sans-serif',padding:24},top:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:18},logo:{width:48,height:48,borderRadius:16,display:'grid',placeItems:'center',fontWeight:900,color:'#17120a',background:'linear-gradient(135deg,#fff1bb,#d59d3a 60%,#7b4d14)',boxShadow:'0 14px 36px rgba(213,157,58,.3)'},card:{background:'rgba(18,20,24,.78)',border:'1px solid rgba(225,190,116,.2)',borderRadius:22,padding:18,marginBottom:14},muted:{color:'#b7aa91',lineHeight:1.7},label:{display:'block',margin:'14px 0 7px',color:'#d8c392',fontSize:13,fontWeight:800},input:{height:46,border:'1px solid rgba(225,190,116,.26)',borderRadius:14,background:'rgba(255,255,255,.06)',color:'#fff',padding:'0 13px',outline:'none',width:'100%'},btn:{height:44,border:0,borderRadius:14,padding:'0 17px',background:'linear-gradient(135deg,#f4d78b,#a87222)',color:'#161008',fontWeight:900,cursor:'pointer'},ghost:{height:44,border:'1px solid rgba(225,190,116,.24)',borderRadius:14,padding:'0 15px',background:'rgba(255,255,255,.05)',color:'#f7ead0',fontWeight:800,cursor:'pointer'},row:{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginTop:16},grid:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12},ok:{color:'#7dff9e'},bad:{color:'#ff9b9b'}};
+function Tip({text}){if(!text)return null;const ok=String(text).includes('成功');return <p style={ok?S.ok:S.bad}>{text}</p>}
 export default function SidebarAccountEntry(){
-  useEffect(()=>{
-    function run(){
-      const aside=document.querySelector('aside');
-      if(!aside||document.getElementById('yulong-account-entry')) return;
-      const btn=document.createElement('button');
-      btn.id='yulong-account-entry';
-      btn.textContent='账号密码设置';
-      btn.onclick=()=>{location.href='/account'};
-      Object.assign(btn.style,{display:'block',width:'100%',margin:'8px 0',border:'0',borderRadius:'15px',padding:'14px 15px',color:'#f7ead0',textAlign:'left',cursor:'pointer',fontWeight:'700',background:'rgba(255,255,255,.04)'});
-      aside.appendChild(btn);
-    }
-    run();
-    const timer=setInterval(run,1000);
-    return ()=>clearInterval(timer);
-  },[]);
-  return null;
+  const [open,setOpen]=useState(false),[email,setEmail]=useState(''),[loginSecret,setLoginSecret]=useState(''),[msg,setMsg]=useState(''),[info,setInfo]=useState(null),[codeInfo,setCodeInfo]=useState(null),[code,setCode]=useState(''),[expiresAt,setExpiresAt]=useState(''),[codeMsg,setCodeMsg]=useState('');
+  async function load(){
+    const a=await fetch('/api/admin-account',{cache:'no-store'}).then(r=>r.json()).catch(()=>null);setInfo(a);if(a?.email)setEmail(a.email);
+    const c=await fetch('/api/access-settings',{cache:'no-store'}).then(r=>r.json()).catch(()=>null);setCodeInfo(c);if(c?.current?.code)setCode(c.current.code);if(c?.current?.expiresAt)setExpiresAt(c.current.expiresAt.slice(0,16));
+  }
+  useEffect(()=>{function run(){const aside=document.querySelector('aside');if(!aside||document.getElementById('yulong-account-entry'))return;const btn=document.createElement('button');btn.id='yulong-account-entry';btn.textContent='账号密码设置';btn.onclick=()=>{setOpen(true);setTimeout(load,0)};Object.assign(btn.style,{display:'block',width:'100%',margin:'8px 0',border:'0',borderRadius:'15px',padding:'14px 15px',color:'#f7ead0',textAlign:'left',cursor:'pointer',fontWeight:'700',background:'rgba(255,255,255,.04)'});aside.appendChild(btn)}run();const timer=setInterval(run,1000);return()=>clearInterval(timer)},[]);
+  async function saveAccount(){setMsg('保存中...');const r=await fetch('/api/admin-account',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,loginSecret})});const j=await r.json().catch(()=>({}));setMsg(j.message||String(r.status));if(r.ok){setLoginSecret('');load()}}
+  async function saveCode(){setCodeMsg('保存中...');const iso=expiresAt?new Date(expiresAt).toISOString():'';const r=await fetch('/api/access-settings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,expiresAt:iso,enabled:true,note:'后台内置设置'})});const j=await r.json().catch(()=>({}));setCodeMsg(j.message||String(r.status));load()}
+  if(!open)return null;
+  return <><div style={S.shade} onClick={()=>setOpen(false)} /><section style={S.panel}><div style={S.top}><div style={{display:'flex',gap:12,alignItems:'center'}}><div style={S.logo}>龙</div><div><h1 style={{margin:0}}>后台安全设置</h1><p style={{...S.muted,margin:'4px 0 0'}}>账号登录与动态验证码统一管理</p></div></div><button style={S.ghost} onClick={()=>setOpen(false)}>关闭</button></div><div style={S.card}><h2 style={{marginTop:0}}>账号密码设置</h2><p style={S.muted}>当前账号：{info?.email||'-'}　来源：{info?.source||'-'}</p><div style={S.grid}><label><span style={S.label}>后台邮箱</span><input style={S.input} value={email} onChange={e=>setEmail(e.target.value)} placeholder='admin@example.com'/></label><label><span style={S.label}>新登录口令</span><input style={S.input} value={loginSecret} onChange={e=>setLoginSecret(e.target.value)} placeholder='至少 6 位'/></label></div><div style={S.row}><button style={S.btn} onClick={saveAccount}>保存账号设置</button><button style={S.ghost} onClick={load}>刷新</button></div><Tip text={msg}/></div><div style={S.card}><h2 style={{marginTop:0}}>动态验证码设置</h2><p style={S.muted}>当前验证码：<b style={{color:'#f4d78b',letterSpacing:3}}>{codeInfo?.current?.code||'------'}</b>　过期：{codeInfo?.current?.expiresAt||'-'}</p><div style={S.grid}><label><span style={S.label}>6 位验证码</span><input style={S.input} value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder='123456'/></label><label><span style={S.label}>过期时间</span><input style={S.input} type='datetime-local' value={expiresAt} onChange={e=>setExpiresAt(e.target.value)}/></label></div><div style={S.row}><button style={S.btn} onClick={saveCode}>保存验证码</button><button style={S.ghost} onClick={load}>刷新</button></div><Tip text={codeMsg}/></div><p style={S.muted}>此设置面板已嵌入后台左侧菜单，不再需要单独打开 /account 页面。</p></section></>
 }
