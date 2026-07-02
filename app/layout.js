@@ -1,6 +1,7 @@
 import './globals.css';
+import SidebarAccountEntry from './SidebarAccountEntry';
 
 export const metadata = { title: '玉龙VPN 管理后台', description: 'Yulong VPN Admin' };
 export default function RootLayout({ children }) {
-  return <html lang="zh-CN"><body>{children}</body></html>;
+  return <html lang="zh-CN"><body>{children}<SidebarAccountEntry /></body></html>;
 }
