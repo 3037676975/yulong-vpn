@@ -1,1 +1,18 @@
-{"name":"yulong-vpn","version":"2.0.0","private":true,"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"@supabase/supabase-js":"^2.50.0","next":"14.2.18","react":"18.3.1","react-dom":"18.3.1"},"devDependencies":{}}
+{
+  "name": "yulong-vpn",
+  "version": "2.0.0",
+  "private": false,
+  "description": "玉龙VPN 2.0：Chrome 插件配置后台、节点管理、验证码准入、后台检测与使用统计。",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.0",
+    "next": "14.2.18",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {}
+}
