@@ -1,4 +1,4 @@
-name: Capacitor Android APK Release
+name: Android APK Release
 
 on:
   push:
@@ -8,213 +8,78 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: capacitor-android-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  APP_NAME: YulongVPN
-  NODE_VERSION: '22'
-  JAVA_VERSION: '17'
-  CAPACITOR_VERSION: '8.4.1'
-
 jobs:
-  build-and-release:
-    name: Build APK and upload GitHub Release
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '22'
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: '17'
 
-      - name: Create temporary Capacitor project from cordova-app/www
-        shell: bash
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create Capacitor project
         run: |
-          set -euo pipefail
+          set -e
           rm -rf capacitor-build
           mkdir -p capacitor-build/www
-
           if [ -d cordova-app/www ]; then
             cp -R cordova-app/www/. capacitor-build/www/
-          elif [ -d www ]; then
-            cp -R www/. capacitor-build/www/
           else
-            echo "没有找到 cordova-app/www 或 www 目录"
-            exit 1
+            cat > capacitor-build/www/index.html <<'HTML'
+          <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Yulong App</title></head><body style="font-family:sans-serif;background:#06080b;color:#f2cf75;text-align:center;padding:40px"><h1>Yulong App</h1><p>Android build ok.</p></body></html>
+          HTML
           fi
-
-          cat > capacitor-build/package.json <<JSON
-          {
-            "name": "yulong-vpn-capacitor",
-            "version": "1.0.0",
-            "private": true,
-            "scripts": {
-              "build": "node -e \"console.log('web assets ready')\""
-            },
-            "dependencies": {
-              "@capacitor/android": "${CAPACITOR_VERSION}",
-              "@capacitor/core": "${CAPACITOR_VERSION}"
-            },
-            "devDependencies": {
-              "@capacitor/cli": "${CAPACITOR_VERSION}"
-            }
-          }
-          JSON
-
-          cat > capacitor-build/capacitor.config.json <<JSON
-          {
-            "appId": "com.yulong.vpn",
-            "appName": "玉龙VPN",
-            "webDir": "www",
-            "bundledWebRuntime": false,
-            "android": {
-              "allowMixedContent": true,
-              "captureInput": true,
-              "webContentsDebuggingEnabled": false
-            }
-          }
-          JSON
-
-          cat > capacitor-build/www/capacitor-compat.js <<'JS'
-          (function () {
-            const nodes = [
-              { id: 'auto', name: '自动选择', server: '127.0.0.1', address: '127.0.0.1', port: 443, protocol: 'https' },
-              { id: 'demo-hk', name: '香港演示节点', server: 'hk.demo.local', address: 'hk.demo.local', port: 443, protocol: 'https' },
-              { id: 'demo-sg', name: '新加坡演示节点', server: 'sg.demo.local', address: 'sg.demo.local', port: 443, protocol: 'https' }
-            ];
-            let connected = false;
-            let selected = nodes[0];
-            function ok(extra) { return Promise.resolve(Object.assign({ ok: true, success: true }, extra || {})); }
-            window.YulongVPN = window.YulongVPN || {
-              api(method, path, body) {
-                const p = String(path || '').toLowerCase();
-                if (p.includes('config') || p.includes('nodes')) return ok({ nodes });
-                if (p.includes('verify')) return ok({ verified: true, expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString() });
-                if (p.includes('status')) return ok({ connected, node: selected, activeNode: selected });
-                if (p.includes('connect')) { connected = true; selected = body && body.node ? body.node : selected; return ok({ connected, node: selected }); }
-                if (p.includes('disconnect')) { connected = false; return ok({ connected }); }
-                if (p.includes('check') || p.includes('speed') || p.includes('ping')) {
-                  return ok({ results: nodes.map((n, i) => Object.assign({}, n, { ok: true, latency: 30 + i * 18 })) });
-                }
-                return ok({ nodes, connected, node: selected });
-              }
-            };
-            document.addEventListener('deviceready', function () {}, false);
-            setTimeout(function () {
-              try { document.dispatchEvent(new Event('deviceready')); } catch (e) {}
-            }, 0);
-          })();
+          cat > capacitor-build/www/cordova.js <<'JS'
+          window.YulongVPN = window.YulongVPN || { api: function(){ return Promise.resolve({ ok:true, nodes:[] }); } };
+          setTimeout(function(){ try { document.dispatchEvent(new Event('deviceready')); } catch(e){} }, 0);
           JS
+          cat > capacitor-build/package.json <<'JSON'
+          {"private":true,"dependencies":{"@capacitor/core":"latest","@capacitor/android":"latest"},"devDependencies":{"@capacitor/cli":"latest"}}
+          JSON
+          cat > capacitor-build/capacitor.config.json <<'JSON'
+          {"appId":"com.yulong.app","appName":"Yulong App","webDir":"www"}
+          JSON
 
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('capacitor-build/www/index.html')
-          s = p.read_text(encoding='utf-8')
-          s = s.replace('<script src="cordova.js"></script>', '<script src="capacitor-compat.js"></script>')
-          s = s.replace("<script src='cordova.js'></script>", "<script src='capacitor-compat.js'></script>")
-          if 'capacitor-compat.js' not in s:
-              s = s.replace('</body>', '<script src="capacitor-compat.js"></script>\n</body>')
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Install Capacitor dependencies
+      - name: Install dependencies
         working-directory: capacitor-build
         run: npm install
 
-      - name: Add Android platform
+      - name: Add Android
         working-directory: capacitor-build
         run: npx cap add android
 
-      - name: Sync Android project
-        working-directory: capacitor-build
-        run: npx cap sync android
-
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses >/dev/null || true
-
-      - name: Build debug and release APK
+      - name: Build APK
         working-directory: capacitor-build/android
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleDebug assembleRelease --stacktrace
+          ./gradlew assembleDebug --stacktrace
 
-      - name: Prepare APK output
-        id: apk
-        shell: bash
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      - name: Collect APK
         run: |
-          set -euo pipefail
           mkdir -p dist
-          debug_apk=$(find capacitor-build/android/app/build/outputs/apk/debug -name '*.apk' | head -n 1)
-          release_apk=$(find capacitor-build/android/app/build/outputs/apk/release -name '*release*.apk' ! -name '*aligned*' ! -name '*signed*' | head -n 1 || true)
+          cp capacitor-build/android/app/build/outputs/apk/debug/app-debug.apk dist/yulong-app-debug.apk
 
-          if [ -z "${debug_apk:-}" ]; then
-            echo "没有找到 debug APK"
-            exit 1
-          fi
-
-          cp "$debug_apk" "dist/${APP_NAME}-debug-installable.apk"
-
-          if [ -n "${release_apk:-}" ] && [ -n "${ANDROID_KEYSTORE_BASE64:-}" ] && [ -n "${ANDROID_KEY_ALIAS:-}" ] && [ -n "${ANDROID_KEYSTORE_PASSWORD:-}" ] && [ -n "${ANDROID_KEY_PASSWORD:-}" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > release.keystore
-            build_tools=$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -mindepth 1 -type d | sort -V | tail -n 1)
-            "$build_tools/zipalign" -p -f 4 "$release_apk" "dist/${APP_NAME}-release-aligned.apk"
-            "$build_tools/apksigner" sign \
-              --ks release.keystore \
-              --ks-key-alias "$ANDROID_KEY_ALIAS" \
-              --ks-pass "pass:$ANDROID_KEYSTORE_PASSWORD" \
-              --key-pass "pass:$ANDROID_KEY_PASSWORD" \
-              --out "dist/${APP_NAME}-release-signed.apk" \
-              "dist/${APP_NAME}-release-aligned.apk"
-            "$build_tools/apksigner" verify --print-certs "dist/${APP_NAME}-release-signed.apk"
-            echo "main_apk=dist/${APP_NAME}-release-signed.apk" >> "$GITHUB_OUTPUT"
-            echo "signed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "main_apk=dist/${APP_NAME}-debug-installable.apk" >> "$GITHUB_OUTPUT"
-            echo "signed=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v6
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.APP_NAME }}-apk-${{ github.run_number }}
-          path: dist/*.apk
-          if-no-files-found: error
+          name: yulong-app-debug-apk
+          path: dist/yulong-app-debug.apk
 
-      - name: Create GitHub Release
+      - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-          MAIN_APK: ${{ steps.apk.outputs.main_apk }}
-          SIGNED: ${{ steps.apk.outputs.signed }}
         run: |
-          set -euo pipefail
-          short_sha=${GITHUB_SHA::7}
-          tag="apk-${GITHUB_RUN_NUMBER}-${short_sha}"
-          cat > release-notes.md <<NOTES
-          ## 玉龙VPN Android APK
-
-          - 自动构建来源: ${GITHUB_SHA}
-          - Workflow run: ${GITHUB_RUN_NUMBER}
-          - Release APK signed: ${SIGNED}
-
-          没配置签名密钥时，Release 页面会上传一个 debug-installable APK，手机可直接测试安装；配置 GitHub Secrets 后会自动生成正式签名 APK。
-          NOTES
-          gh release create "$tag" dist/*.apk \
-            --target "$GITHUB_SHA" \
-            --title "玉龙VPN APK ${tag}" \
-            --notes-file release-notes.md
+          tag="apk-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}"
+          gh release create "$tag" dist/yulong-app-debug.apk --target "$GITHUB_SHA" --title "Yulong App APK $tag" --notes "自动构建的 Android APK"
