@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 public class MainActivity extends Activity {
     private static final int VPN_REQUEST = 1001;
     private static final String[] API_BASES = new String[]{
+            "https://api2.smilechat.cn",
             "https://yulong-vpn-three.vercel.app",
             "https://yulong-vpn-3037676975s-projects.vercel.app",
             "https://yulong-vpn-git-main-3037676975s-projects.vercel.app"
@@ -57,7 +58,7 @@ public class MainActivity extends Activity {
             try{ return requestOne(base, method, path, body); }
             catch(Exception e){ last = e; }
         }
-        throw new Exception("无法连接后台接口，请检查手机网络或 Vercel 域名是否能访问。最后错误：" + (last == null ? "unknown" : last.getMessage()));
+        throw new Exception("无法连接玉龙VPN 2.0 后台接口，请检查 api2.smilechat.cn 是否已在 Vercel 绑定并完成 DNS 解析。最后错误：" + (last == null ? "unknown" : last.getMessage()));
     }
 
     private String requestOne(String base, String method, String path, JSONObject body) throws Exception{
@@ -68,7 +69,7 @@ public class MainActivity extends Activity {
         c.setReadTimeout(20000);
         c.setRequestProperty("accept", "application/json");
         c.setRequestProperty("content-type", "application/json; charset=utf-8");
-        c.setRequestProperty("user-agent", "YulongVPN-Android/1.0");
+        c.setRequestProperty("user-agent", "YulongVPN-Android/2.0");
         if(body != null){
             c.setDoOutput(true);
             byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
@@ -129,7 +130,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void verify(String code){
             new Thread(() -> {
                 try{
-                    JSONObject body = new JSONObject().put("code", code).put("clientId", clientId()).put("pluginVersion", "android-1.0.1");
+                    JSONObject body = new JSONObject().put("code", code).put("clientId", clientId()).put("pluginVersion", "android-2.0");
                     JSONObject r = new JSONObject(request("POST", "/api/access-code", body));
                     if(r.optBoolean("ok")) prefs.edit().putBoolean("verified", true).putString("expiresAt", r.optString("expiresAt", "")).apply();
                     callback("onAndroidVerify", r);
@@ -140,7 +141,7 @@ public class MainActivity extends Activity {
             new Thread(() -> { try{ callback("onAndroidCheck", new JSONObject(request("POST", "/api/plugin-node-test-all", new JSONObject()))); }catch(Exception e){ callback("onAndroidCheck", error(e.getMessage())); } }).start();
         }
         @JavascriptInterface public void record(String event, String nodeName){
-            new Thread(() -> { try{ request("POST", "/api/client-stats", new JSONObject().put("clientId", clientId()).put("event", event).put("pluginVersion", "android-1.0.1").put("nodeName", nodeName)); }catch(Exception ignored){} }).start();
+            new Thread(() -> { try{ request("POST", "/api/client-stats", new JSONObject().put("clientId", clientId()).put("event", event).put("pluginVersion", "android-2.0").put("nodeName", nodeName)); }catch(Exception ignored){} }).start();
         }
         @JavascriptInterface public void connect(String nodeJson){
             try{
