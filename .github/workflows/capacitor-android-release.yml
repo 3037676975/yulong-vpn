@@ -15,11 +15,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -29,57 +24,26 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Create Capacitor project
-        run: |
-          set -e
-          rm -rf capacitor-build
-          mkdir -p capacitor-build/www
-          if [ -d cordova-app/www ]; then
-            cp -R cordova-app/www/. capacitor-build/www/
-          else
-            cat > capacitor-build/www/index.html <<'HTML'
-          <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Yulong App</title></head><body style="font-family:sans-serif;background:#06080b;color:#f2cf75;text-align:center;padding:40px"><h1>Yulong App</h1><p>Android build ok.</p></body></html>
-          HTML
-          fi
-          cat > capacitor-build/www/cordova.js <<'JS'
-          window.YulongVPN = window.YulongVPN || { api: function(){ return Promise.resolve({ ok:true, nodes:[] }); } };
-          setTimeout(function(){ try { document.dispatchEvent(new Event('deviceready')); } catch(e){} }, 0);
-          JS
-          cat > capacitor-build/package.json <<'JSON'
-          {"private":true,"dependencies":{"@capacitor/core":"latest","@capacitor/android":"latest"},"devDependencies":{"@capacitor/cli":"latest"}}
-          JSON
-          cat > capacitor-build/capacitor.config.json <<'JSON'
-          {"appId":"com.yulong.app","appName":"Yulong App","webDir":"www"}
-          JSON
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-      - name: Install dependencies
-        working-directory: capacitor-build
-        run: npm install
+      - name: Build debug APK
+        run: gradle -p android-app :app:assembleDebug --no-daemon
 
-      - name: Add Android
-        working-directory: capacitor-build
-        run: npx cap add android
-
-      - name: Build APK
-        working-directory: capacitor-build/android
-        run: |
-          chmod +x ./gradlew
-          ./gradlew assembleDebug --stacktrace
-
-      - name: Collect APK
+      - name: Prepare APK
         run: |
           mkdir -p dist
-          cp capacitor-build/android/app/build/outputs/apk/debug/app-debug.apk dist/yulong-app-debug.apk
+          cp android-app/app/build/outputs/apk/debug/app-debug.apk dist/yulong-vpn-android-debug.apk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yulong-app-debug-apk
-          path: dist/yulong-app-debug.apk
+          name: yulong-vpn-android-debug-apk
+          path: dist/yulong-vpn-android-debug.apk
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="apk-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}"
-          gh release create "$tag" dist/yulong-app-debug.apk --target "$GITHUB_SHA" --title "Yulong App APK $tag" --notes "自动构建的 Android APK"
+          gh release create "$tag" dist/yulong-vpn-android-debug.apk --target "$GITHUB_SHA" --title "Yulong VPN APK $tag" --notes "自动构建的 Android APK"
