@@ -10,6 +10,19 @@ const DEFAULT_HOSTS = [
   '198.2.210.178'
 ];
 
+// Compatible defaults inferred from the existing Yulong HTTP(S) proxy setup.
+// Any Supabase rows or CHATGPT_PROXY_NODES_JSON values override these.
+const DEFAULT_NODES = DEFAULT_HOSTS.map((server, index) => ({
+  id: `chatgpt-default-${index + 1}`,
+  name: `ChatGPT线路${index + 1}`,
+  server,
+  port: 443,
+  scheme: 'https',
+  skipCertVerify: true,
+  priority: index + 1,
+  status: '默认'
+}));
+
 function appKeyAllowed(request) {
   const expected = String(process.env.CHATGPT_APP_KEY || '').trim();
   if (!expected) return true;
@@ -173,16 +186,22 @@ export async function GET(request) {
   }
 
   const envNodes = readEnvNodes();
-  const source = envNodes ? { source: 'env', items: envNodes } : await listNodes();
-  const nodes = normalizeNodes(source.items || []);
+  const configuredSource = envNodes ? { source: 'env', items: envNodes } : await listNodes();
+  let nodes = normalizeNodes(configuredSource.items || []);
+  let sourceName = configuredSource.source || 'unknown';
+
+  if (!nodes.length) {
+    nodes = normalizeNodes(DEFAULT_NODES);
+    sourceName = 'default-https-443';
+  }
 
   if (!nodes.length) {
     return NextResponse.json({
       ok: false,
       error: 'NO_CHATGPT_NODES',
-      message: '后台没有找到三个专用 IP 的完整节点配置，请补充协议和端口。',
+      message: '没有可用的专用节点配置。',
       expectedHosts: allowedHosts(),
-      source: source.source || 'unknown'
+      source: sourceName
     }, {
       status: 503,
       headers: { 'cache-control': 'no-store' }
@@ -198,7 +217,7 @@ export async function GET(request) {
         'profile-update-interval': '1',
         'subscription-userinfo': 'upload=0; download=0; total=107374182400; expire=4102444800',
         'x-chatgpt-node-count': String(nodes.length),
-        'x-chatgpt-node-source': source.source || 'unknown'
+        'x-chatgpt-node-source': sourceName
       }
     });
   } catch (error) {
