@@ -3,10 +3,9 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// 已确认的 HTTP over TLS 代理：类型 HTTP、TCP 传输、TLS 开启。
 const FALLBACK_PROXIES = [
-  { scheme: 'https', host: '137.175.77.37', port: 443, priority: 10 },
-  { scheme: 'https', host: '107.149.108.66', port: 443, priority: 20 },
-  { scheme: 'https', host: '198.2.210.178', port: 443, priority: 30 }
+  { scheme: 'https', host: 'fan.365747.xyz', port: 443, priority: 10 }
 ];
 
 function readConfiguredProxies() {
